@@ -1101,12 +1101,13 @@ class ProjectController extends Controller
 
     public function bugCommentStore(Request $request, $project_id, $bug_id)
     {
-
         $post               = [];
         $post['bug_id']     = $bug_id;
         $post['comment']    = $request->comment;
-        $post['created_by'] = \Auth::user()->authId();
-        $post['user_type']  = \Auth::user()->type;
+        $post['created_by'] = Auth::user()->authId();
+//        TODO This could be better like that
+//        $post['created_by'] = Auth::id();
+        $post['user_type']  = Auth::user()->type;
         $comment            = BugComment::create($post);
         $comment->deleteUrl = route('bug.comment.destroy', [$comment->id]);
 

@@ -666,17 +666,21 @@ class Utility extends Model
     {
         $bankAccount = BankAccount::find($id);
         if ($bankAccount) {
-            if ($type == 'credit') {
-                $oldBalance = $bankAccount->opening_balance;
-                $bankAccount->opening_balance = $oldBalance + $amount;
-                $bankAccount->save();
-            } elseif ($type == 'debit') {
+            if ($type == 'debit' && $bankAccount->opening_balance - $amount >= 0) {
                 $oldBalance = $bankAccount->opening_balance;
                 $bankAccount->opening_balance = $oldBalance - $amount;
                 $bankAccount->save();
+                return true;
+            }
+            elseif ($type == 'credit') {
+                $oldBalance = $bankAccount->opening_balance;
+                $bankAccount->opening_balance = $oldBalance + $amount;
+                $bankAccount->save();
+            }
+            else{
+                return false;
             }
         }
-
     }
 
     // get font-color code accourding to bg-color

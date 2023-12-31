@@ -109,8 +109,6 @@ class UserController extends Controller
                 $user->userDefaultDataRegister($user->id);
                 $user->userWarehouseRegister($user->id);
 
-                //default bank account for new company
-                $user->userDefaultBankAccount($user->id);
 
                 Utility::chartOfAccountTypeData($user->id);
                 Utility::chartOfAccountData($user);

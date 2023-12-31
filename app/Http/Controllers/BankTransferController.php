@@ -2,10 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Mapper\BankMapper;
 use App\Models\BankAccount;
 use App\Models\BankTransfer;
 use App\Models\Utility;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use function MongoDB\BSON\toJSON;
 
 class BankTransferController extends Controller
 {
@@ -13,123 +18,114 @@ class BankTransferController extends Controller
     public function index(Request $request)
     {
 
-        if(\Auth::user()->can('manage bank transfer'))
-        {
-            $account = BankAccount::where('created_by', '=', \Auth::user()->creatorId())->get()->pluck('holder_name', 'id');
+        if (Auth::user()->can('manage bank transfer')) {
+            $account = BankAccount::query()->where('created_by', '=', Auth::user()->creatorId())->get()->pluck('holder_name', 'id');
             $account->prepend('Select Account', '');
 
-            $query = BankTransfer::where('created_by', '=', \Auth::user()->creatorId());
+            $query = BankTransfer::query()->where('created_by', '=', Auth::user()->creatorId());
 
-            if(!empty($request->date))
-            {
+            if (!empty($request->date)) {
                 $date_range = explode('to', $request->date);
                 $query->whereBetween('date', $date_range);
             }
 
-            if(!empty($request->f_account))
-            {
-                $query->where('from_account', '=', $request->f_account);
+            if (!empty($request->sender_id)) {
+                $query->where('sender_id', '=', $request->sender_id);
             }
-            if(!empty($request->t_account))
-            {
-                $query->where('to_account', '=', $request->t_account);
+            if (!empty($request->receiver_id)) {
+                $query->where('receiver_id', '=', $request->receiver_id);
             }
             $transfers = $query->get();
 
             return view('bank-transfer.index', compact('transfers', 'account'));
-        }
-        else
-        {
+        } else {
             return redirect()->back()->with('error', __('Permission denied.'));
         }
     }
 
     public function create()
     {
-        if(\Auth::user()->can('create bank transfer'))
-        {
-            $bankAccount = BankAccount::select('*', \DB::raw("CONCAT(bank_name,' ',holder_name) AS name"))->where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
-
-            return view('bank-transfer.create', compact('bankAccount'));
-        }
-        else
-        {
+        if (Auth::user()->can('create bank transfer')) {
+            $bankAccounts = BankAccount::select('bank_accounts.*', DB::raw("CONCAT(bank_accounts.holder_name, ' (', bank_currencies.name, ')') AS name"))
+                ->leftJoin('bank_currencies', 'bank_currencies.id', '=', 'bank_accounts.currency_id')
+                ->where('bank_accounts.created_by', Auth::user()->creatorId())
+                ->get()
+                ->pluck('name', 'id');
+            return view('bank-transfer.create', compact('bankAccounts'));
+        } else {
             return response()->json(['error' => __('Permission denied.')], 401);
         }
     }
 
+
     public function store(Request $request)
     {
-        if(\Auth::user()->can('create bank transfer'))
-        {
-            $validator = \Validator::make(
+        if (Auth::user()->can('create bank transfer')) {
+            $validator = Validator::make(
                 $request->all(), [
-                                   'from_account' => 'required|numeric',
-                                   'to_account' => 'required|numeric',
-                                   'amount' => 'required|numeric',
-                                   'date' => 'required',
-                               ]
+                    'sender_id' => 'required|numeric',
+                    'receiver_id' => 'required|numeric',
+                    'amount' => 'required|numeric',
+                    'date' => 'required',
+                ]
             );
-            if($validator->fails())
-            {
+            if ($validator->fails()) {
                 $messages = $validator->getMessageBag();
-
                 return redirect()->back()->with('error', $messages->first());
             }
-
-            $transfer                 = new BankTransfer();
-            $transfer->from_account   = $request->from_account;
-            $transfer->to_account     = $request->to_account;
-            $transfer->amount         = $request->amount;
-            $transfer->date           = $request->date;
+            $transfer = new BankTransfer();
+            $transfer->sender_id = $request->sender_id;
+            $transfer->receiver_id = $request->receiver_id;
+            $transfer->amount = $request->amount;
+//            $transfer->sent_amount = $request->sent_amount;
+//            $transfer->received_amount = $request->received_amount;
+            $transfer->rate = $request->rate;
+            $transfer->date = $request->date;
             $transfer->payment_method = 0;
-            $transfer->reference      = $request->reference;
-            $transfer->description    = $request->description;
-            $transfer->created_by     = \Auth::user()->creatorId();
-            $transfer->save();
+            $transfer->reference = $request->reference;
+            $transfer->description = $request->description;
+            $transfer->created_by = Auth::user()->creatorId();
 
-            Utility::bankAccountBalance($request->from_account, $request->amount, 'debit');
+            if (Utility::bankAccountBalance($request->sender_id, $request->amount, 'debit')) {
+                Utility::bankAccountBalance($request->receiver_id, ($request->amount * $request->rate), 'credit');
+                $transfer->save();
+            } else {
+                return redirect()->back()->with('error', __('Insufficient Balance '));
 
-            Utility::bankAccountBalance($request->to_account, $request->amount, 'credit');
+            }
+
 
             return redirect()->route('bank-transfer.index')->with('success', __('Amount successfully transfer.'));
-        }
-        else
-        {
+        } else {
             return redirect()->back()->with('error', __('Permission denied.'));
         }
     }
 
-    public function edit(BankTransfer $transfer,$id)
+    public function edit(BankTransfer $transfer, $id)
     {
-        if(\Auth::user()->can('edit bank transfer'))
-        {
-            $transfer = BankTransfer::where('id',$id)->first();
+        if (\Auth::user()->can('edit bank transfer')) {
+            $transfer = BankTransfer::where('id', $id)->first();
             $bankAccount = BankAccount::select('*', \DB::raw("CONCAT(bank_name,' ',holder_name) AS name"))->where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
 
             return view('bank-transfer.edit', compact('bankAccount', 'transfer'));
-        }
-        else
-        {
+        } else {
             return response()->json(['error' => __('Permission denied.')], 401);
         }
     }
 
-    public function update(Request $request, BankTransfer $transfer,$id)
+    public function update(Request $request, BankTransfer $transfer, $id)
     {
-        if(\Auth::user()->can('edit bank transfer'))
-        {
+        if (\Auth::user()->can('edit bank transfer')) {
             $transfer = BankTransfer::find($id);
             $validator = \Validator::make(
                 $request->all(), [
-                                   'from_account' => 'required|numeric',
-                                   'to_account' => 'required|numeric',
-                                   'amount' => 'required|numeric',
-                                   'date' => 'required',
-                               ]
+                    'from_account' => 'required|numeric',
+                    'to_account' => 'required|numeric',
+                    'amount' => 'required|numeric',
+                    'date' => 'required',
+                ]
             );
-            if($validator->fails())
-            {
+            if ($validator->fails()) {
                 $messages = $validator->getMessageBag();
 
                 return redirect()->back()->with('error', $messages->first());
@@ -138,13 +134,13 @@ class BankTransferController extends Controller
             Utility::bankAccountBalance($transfer->from_account, $transfer->amount, 'credit');
             Utility::bankAccountBalance($transfer->to_account, $transfer->amount, 'debit');
 
-            $transfer->from_account   = $request->from_account;
-            $transfer->to_account     = $request->to_account;
-            $transfer->amount         = $request->amount;
-            $transfer->date           = $request->date;
+            $transfer->from_account = $request->from_account;
+            $transfer->to_account = $request->to_account;
+            $transfer->amount = $request->amount;
+            $transfer->date = $request->date;
             $transfer->payment_method = 0;
-            $transfer->reference      = $request->reference;
-            $transfer->description    = $request->description;
+            $transfer->reference = $request->reference;
+            $transfer->description = $request->description;
             $transfer->save();
 
 
@@ -152,9 +148,7 @@ class BankTransferController extends Controller
             Utility::bankAccountBalance($request->to_account, $request->amount, 'credit');
 
             return redirect()->route('bank-transfer.index')->with('success', __('Amount successfully transfer updated.'));
-        }
-        else
-        {
+        } else {
             return redirect()->back()->with('error', __('Permission denied.'));
         }
     }
@@ -163,24 +157,18 @@ class BankTransferController extends Controller
     public function destroy(BankTransfer $transfer)
     {
 
-        if(\Auth::user()->can('delete bank transfer'))
-        {
-            if($transfer->created_by == \Auth::user()->creatorId())
-            {
+        if (\Auth::user()->can('delete bank transfer')) {
+            if ($transfer->created_by == \Auth::user()->creatorId()) {
                 $transfer->delete();
 
                 Utility::bankAccountBalance($transfer->from_account, $transfer->amount, 'credit');
                 Utility::bankAccountBalance($transfer->to_account, $transfer->amount, 'debit');
 
                 return redirect()->route('bank-transfer.index')->with('success', __('Amount transfer successfully deleted.'));
-            }
-            else
-            {
+            } else {
                 return redirect()->back()->with('error', __('Permission denied.'));
             }
-        }
-        else
-        {
+        } else {
             return redirect()->back()->with('error', __('Permission denied.'));
         }
     }

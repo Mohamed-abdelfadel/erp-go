@@ -2781,18 +2781,6 @@ class User extends Authenticatable implements MustVerifyEmail
         }
     }
 
-    public static function userDefaultWarehouse(){
-        warehouse::create(
-            [
-                'name' => 'North Warehouse',
-                'address' => '723 N. Tillamook Street Portland, OR Portland, United States',
-                'city' => 'Portland',
-                'city_zip' => 97227,
-                'created_by' => 2,
-            ]
-        );
-
-    }
 
     public function userWarehouseRegister($user_id){
         warehouse::create(
@@ -2806,25 +2794,6 @@ class User extends Authenticatable implements MustVerifyEmail
         );
 
     }
-
-    //default bank account for new company
-    public function userDefaultBankAccount($user_id){
-        BankAccount::create(
-            [
-                'holder_name' => 'cash',
-                'bank_name' => '',
-                'account_number' => '-',
-                'opening_balance' => '0.00',
-                'contact_number' => '-',
-                'bank_address' => '-',
-                'created_by' => $user_id,
-            ]
-        );
-
-    }
-
-
-
 
     public function extraKeyword(){
             $keyArr=[
