@@ -44,15 +44,15 @@
                                     </div>
                                     <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12 date">
                                         <div class="btn-box">
-                                            {{ Form::label('f_account', __('From Account'),['class'=>'form-label'])}}
-                                            {{ Form::select('f_account',$account,isset($_GET['f_account'])?$_GET['f_account']:'', array('class' => 'form-control select')) }}
+                                            {{ Form::label('sender_id', __('From Account'),['class'=>'form-label'])}}
+                                            {{ Form::select('sender_id',$account,isset($_GET['sender_id'])?$_GET['sender_id']:'', array('class' => 'form-control select')) }}
                                         </div>
                                     </div>
 
                                     <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12">
                                         <div class="btn-box">
-                                            {{ Form::label('t_account', __('To Account'),['class'=>'form-label'])}}
-                                            {{ Form::select('t_account', $account,isset($_GET['t_account'])?$_GET['t_account']:'', array('class' => 'form-control select')) }}
+                                            {{ Form::label('receiver_id', __('To Account'),['class'=>'form-label'])}}
+                                            {{ Form::select('receiver_id', $account,isset($_GET['receiver_id'])?$_GET['receiver_id']:'', array('class' => 'form-control select')) }}
                                         </div>
                                     </div>
 
@@ -96,6 +96,7 @@
                                 <th> {{__('From Account')}}</th>
                                 <th> {{__('To Account')}}</th>
                                 <th> {{__('Amount')}}</th>
+                                <th> {{__('Rate')}}</th>
                                 <th> {{__('Reference')}}</th>
                                 <th> {{__('Description')}}</th>
                                 @if(Gate::check('edit transfer') || Gate::check('delete transfer'))
@@ -108,9 +109,10 @@
                             @foreach ($transfers as $transfer)
                                 <tr class="font-style">
                                     <td>{{ \Auth::user()->dateFormat( $transfer->date) }}</td>
-                                    <td>{{ !empty($transfer->fromBankAccount())? $transfer->fromBankAccount()->bank_name.' '.$transfer->fromBankAccount()->holder_name:''}}</td>
-                                    <td>{{!empty( $transfer->toBankAccount())? $transfer->toBankAccount()->bank_name.' '. $transfer->toBankAccount()->holder_name:''}}</td>
-                                    <td>{{  \Auth::user()->priceFormat( $transfer->amount)}}</td>
+                                    <td>{{ $transfer->SenderBankAccount()->holder_name . " -  " . $transfer->SenderBankAccount()->currency->name}}</td>
+                                    <td>{{ $transfer->ReceiverBankAccount()->holder_name . " -  " . $transfer->ReceiverBankAccount()->currency->name}}</td>
+                                    <td>{{  $transfer->amount  . " " . $transfer->SenderBankAccount()->currency->symbol }}</td>
+                                    <td>{{  $transfer->rate }}</td>
                                     <td>{{  $transfer->reference}}</td>
                                     <td>{{  $transfer->description}}</td>
                                     @if(Gate::check('edit transfer') || Gate::check('delete transfer'))

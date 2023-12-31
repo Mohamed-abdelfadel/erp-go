@@ -2,16 +2,20 @@
 <div class="modal-body">
     <div class="row">
         <div class="form-group  col-md-6">
-            {{ Form::label('from_account', __('From Account'),['class'=>'form-label']) }}
-            {{ Form::select('from_account', $bankAccount,null, array('class' => 'form-control select','required'=>'required')) }}
+            {{ Form::label('sender_id', __('Sender'),['class'=>'form-label']) }}
+            {{ Form::select('sender_id', $bankAccounts, null, ['class' => 'form-control select', 'required' => 'required']) }}
         </div>
         <div class="form-group  col-md-6">
-            {{ Form::label('to_account', __('To Account'),['class'=>'form-label']) }}
-            {{ Form::select('to_account', $bankAccount,null, array('class' => 'form-control select','required'=>'required')) }}
+            {{ Form::label('receiver_id', __('Receiver'),['class'=>'form-label']) }}
+            {{ Form::select('receiver_id', $bankAccounts, null, ['class' => 'form-control select', 'required' => 'required']) }}
+        </div>
+        <div class="form-group  col-md-6">
+            {{ Form::label('rate', __('Rate (Enter 4 decimal points)'),['class'=>'form-label']) }}
+            {{ Form::text('rate', 1, array('class' => 'form-control','required'=>'required')) }}
         </div>
         <div class="form-group  col-md-6">
             {{ Form::label('amount', __('Amount'),['class'=>'form-label']) }}
-            {{ Form::number('amount', '', array('class' => 'form-control','required'=>'required','step'=>'0.01')) }}
+            {{ Form::text('amount', '', array('class' => 'form-control','required'=>'required')) }}
         </div>
         <div class="form-group  col-md-6">
             {{ Form::label('date', __('Date'),['class'=>'form-label']) }}

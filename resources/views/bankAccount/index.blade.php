@@ -31,6 +31,7 @@
                                 <th> {{__('Name')}}</th>
                                 <th> {{__('Bank')}}</th>
                                 <th> {{__('Account Number')}}</th>
+                                <th> {{__('Account Currency')}}</th>
                                 <th> {{__('Current Balance')}}</th>
                                 <th> {{__('Contact Number')}}</th>
                                 <th> {{__('Bank Branch')}}</th>
@@ -46,7 +47,8 @@
                                     <td>{{  $account->holder_name}}</td>
                                     <td>{{  $account->bank_name}}</td>
                                     <td>{{  $account->account_number}}</td>
-                                    <td>{{  \Auth::user()->priceFormat($account->opening_balance)}}</td>
+                                    <td>{{  $account->currency->name}}</td>
+                                    <td>{{  $account->opening_balance . " " .$account->currency->symbol }}</td>
                                     <td>{{  $account->contact_number}}</td>
                                     <td>{{  $account->bank_address}}</td>
                                     @if(Gate::check('edit bank account') || Gate::check('delete bank account'))

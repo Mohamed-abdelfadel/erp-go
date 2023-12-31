@@ -15,6 +15,13 @@
                 {{ Form::text('bank_name', '', array('class' => 'form-control','required'=>'required')) }}
             </div>
         </div>
+        <div class="form-group col-md-6">
+            {{ Form::label('currency_id', __('Bank Currency'), ['class' => 'form-label']) }}
+            <div class="form-icon-user">
+                <span><i class="ti ti-university"></i></span>
+                {{ Form::select('currency_id', [0 => 'Select Currency'] + $currencies->pluck('name', 'id')->toArray(), null, ['class' => 'form-control', 'required' => 'required', 'id' => 'currencySelect']) }}
+            </div>
+        </div>
         <div class="form-group  col-md-6">
             {{ Form::label('account_number', __('Account Number'),['class'=>'form-label']) }}
             <div class="form-icon-user">
