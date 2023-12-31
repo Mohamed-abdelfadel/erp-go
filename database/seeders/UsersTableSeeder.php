@@ -1,6 +1,7 @@
 <?php
 
 namespace Database\Seeders;
+
 use App\Models\ExperienceCertificate;
 use App\Models\GenerateOfferLetter;
 use App\Models\JoiningLetter;
@@ -3059,7 +3060,7 @@ class UsersTableSeeder extends Seeder
         Permission::insert($arrPermissions);
 
 
-        $superAdminRole        = Role::create(
+        $superAdminRole = Role::create(
             [
                 'name' => 'super admin',
                 'created_by' => 0,
@@ -3127,7 +3128,7 @@ class UsersTableSeeder extends Seeder
         $customerRole->givePermissionTo($customerPermission);
 
         // vender
-        $venderRole       = Role::create(
+        $venderRole = Role::create(
             [
                 'name' => 'vender',
                 'created_by' => 0,
@@ -3665,7 +3666,7 @@ class UsersTableSeeder extends Seeder
         $company->assignRole($companyRole);
 
         // accountant
-        $accountantRole       = Role::create(
+        $accountantRole = Role::create(
             [
                 'name' => 'accountant',
                 'created_by' => $company->id,
@@ -3818,20 +3819,8 @@ class UsersTableSeeder extends Seeder
         );
         $accountant->assignRole($accountantRole);
 
-        \App\Models\BankAccount::create(
-            [
-                'holder_name' => 'cash',
-                'bank_name' => '',
-                'account_number' => '-',
-                'opening_balance' => '0.00',
-                'contact_number' => '-',
-                'bank_address' => '-',
-                'created_by' => $company->id,
-            ]
-        );
-
         // accountant
-        $clientRole       = Role::create(
+        $clientRole = Role::create(
             [
                 'name' => 'client',
                 'created_by' => $company->id,
@@ -3884,9 +3873,8 @@ class UsersTableSeeder extends Seeder
             ]
         );
         $client->assignRole($clientRole);
-
         Utility::employeeDetails($accountant->id, $company->id);
-        // Utility::employeeDetails($client->id,$company->id);
+        Utility::employeeDetails($client->id,$company->id);
         Utility::chartOfAccountTypeData($company->id);
         Utility::chartOfAccountData($company);
         Utility::pipeline_lead_deal_Stage($company->id);
@@ -3896,7 +3884,6 @@ class UsersTableSeeder extends Seeder
         Utility::jobStage($company->id);
         $company->defaultEmail();
         $company::userDefaultData();
-        $company::userDefaultWarehouse();
         GenerateOfferLetter::defaultOfferLetter();
         ExperienceCertificate::defaultExpCertificat();
         JoiningLetter::defaultJoiningLetter();
@@ -3904,12 +3891,12 @@ class UsersTableSeeder extends Seeder
 
         $data = [
             ['name'
-            =>'local_storage_validation', 'value'=> 'jpg,jpeg,png,xlsx,xls,csv,pdf', 'created_by'=> 1, 'created_at'=> now(), 'updated_at'=> now()],
-            ['name'=>'wasabi_storage_validation', 'value'=> 'jpg,jpeg,png,xlsx,xls,csv,pdf', 'created_by'=> 1, 'created_at'=> now(), 'updated_at'=> now()],
-            ['name'=>'s3_storage_validation', 'value'=> 'jpg,jpeg,png,xlsx,xls,csv,pdf', 'created_by'=> 1, 'created_at'=> now(), 'updated_at'=> now()],
-            ['name'=>'local_storage_max_upload_size', 'value'=> 2048000, 'created_by'=> 1, 'created_at'=> now(), 'updated_at'=> now()],
-            ['name'=>'wasabi_max_upload_size', 'value'=> 2048000, 'created_by'=> 1, 'created_at'=> now(), 'updated_at'=> now()],
-            ['name'=>'s3_max_upload_size', 'value'=> 2048000, 'created_by'=> 1, 'created_at'=> now(), 'updated_at'=> now()]
+            => 'local_storage_validation', 'value' => 'jpg,jpeg,png,xlsx,xls,csv,pdf', 'created_by' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'wasabi_storage_validation', 'value' => 'jpg,jpeg,png,xlsx,xls,csv,pdf', 'created_by' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 's3_storage_validation', 'value' => 'jpg,jpeg,png,xlsx,xls,csv,pdf', 'created_by' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'local_storage_max_upload_size', 'value' => 2048000, 'created_by' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'wasabi_max_upload_size', 'value' => 2048000, 'created_by' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 's3_max_upload_size', 'value' => 2048000, 'created_by' => 1, 'created_at' => now(), 'updated_at' => now()]
         ];
         DB::table('settings')->insert($data);
         User::factory()->count(10)->create();

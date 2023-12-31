@@ -16,9 +16,8 @@ class CreateBankTransfersTable extends Migration
         Schema::create(
             'bank_transfers', function (Blueprint $table){
             $table->bigIncrements('id');
-            $table->integer('from_account')->default('0');
-            $table->integer('to_account')->default('0');
-            $table->float('amount',15,2)->default('0');
+            $table->float('amount',15,4)->default('0');
+            $table->float('rate',15,4)->default('1');
             $table->date('date');
             $table->integer('payment_method')->default('0');
             $table->string('reference')->nullable();
